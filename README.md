@@ -243,3 +243,286 @@ Shrunk Failure: [0, -6] -> [0, -6]
 ### Why completely random input is ineffective
 
 * 99.99% of random files will fail a certain check since they have some form of integrety and structure
+
+# Non-Determinism and Software QA
+
+### Be able to explain what nondeterminisitc software is
+
+* Nondeterministic software is when the output of the program is not determined by its input
+* Deterministic programs produce the same output on the same input
+
+### Difficulties of nondeterminism
+
+* Defects not revealed during testing can suddenly pop up during usage
+* Defects revealed during testing do not show up when trying to debug them
+ * This leads to unreproducable results
+
+### Nondeterminism and debugging issues
+
+* Some bugs can appear randomly on certaint tests, making it difficult to pin down why these bugs are occuring or where they are occuring
+
+### Memory Errors
+
+* malloc() will return a random address when called (to prevent hackers from guessing memory layout)
+* Stack addresses are also randomized as well for the same reasons
+* ASLR - Address Space Layout Randomization
+
+* Memory errors are errors that access an illegal memory location
+ * Buffer overflow or dangling pointer
+ * Can lead to memory leaks
+
+### Data Race
+
+* When multiple operations are not executed in the correct order, leading to unexpected outcomes
+* The order in which data is access or stored can vary on each iteration of the software
+
+# Static Testing Part 1
+
+### Pros and cons of static testing compared to dynamic testing
+
+* Pros
+ * No need to come up with test cases
+ * Don't need to set up software or hardware to run the program
+ * Can pinpoint defects better than dynamic testing
+ * Can find defects that dynamic testing would miss (dynamic tests are limited to their test cases)
+* Cons
+ * Does not find all defects
+ * Can lead to false positives
+
+### Why Language Choice is important for Compiler Static Analysis
+
+ * The more semantic information is exposed, the more effective analysis (i.e. typed vs non-typed languages)
+ * Easier to debug if you know what type something is
+
+### Code Coverage
+
+ * Code coverage is how much of the codebase is covered by a particular test suite
+
+ * Method Coverage: Contains the entire method
+ * Statement coverage: Contains the statements inside of a method, but not the entire methods
+ * Branch Coverage: % of branch directions covered (if statements)
+ * Condition Coverage: % of boolean expressions covered
+ * Path Coverage: % of paths in the method covered
+ * Parameter value coverage: % of (common) parameter values covered
+ * Entry/Exit coverage: % of method calls/returns covered
+
+### Why does 100% code coverage != defect free?
+
+* Some things cannot be caught
+ * Defects triggered by input values that cover the same paths
+ * Defects on a path with covered statements but was never traversed
+
+### Similarities and differences of Linters and Bug Finders
+
+* Linters: Enable a team to use the same coding style (indentation, naming, comment formatting, etc)
+* Bug Finders: Looks for patterns that are common signs of defects
+ * Catches both false positives and false negatives
+ * Pattern Matches can signal defects, confusing code, performance issues, etc.
+
+* Similarities:
+ * Can detect patterns in code that can help programmer to make necessary changes
+* Differences:
+ * Linters are only concerned with styling consistency, while bug finders can point out potential errors in the code
+
+# Static Testing Part 2   
+
+### Formal Verification
+
+* Proving that a program either has no defects, or has defects (and knowing where they all are)
+
+### How Theorem proving seeks to achieve formal verification
+
+* Theorem proving is deducing postconditions form preconditions through math 
+
+### How Model checking seeks to achieve formal verification
+
+* Model checking is when given a finite state model of a system, all states are exhaustively checked to see if model meets a given specification
+* We are checking whether implementation satisfies specifications
+
+### Pros / Cons of theorem proving compared to model checking
+
+* Pros:
+    * Can prove large programs with many (infinite states)
+    * Model checker needs to visit each state to verify property is true
+    * Leads to programmer having a deeper understanding of a program
+* Cons:
+    * Requires a lot of human involvement
+    * Highly skilled people with formal methods training is needed  
+
+### Similarities and differences of model checking compared to property based testing
+
+* Similarities
+    * Model checking also tests a property instead of an output value
+* Differences
+    * Stochastic testing makes use of a few randomized input values
+    * In Model checking, all states are checkd exhaustively      
+
+### How backtracking and state matching both help in making state space exploration efficient for model checkers
+
+* Backtracking and state matching help ensure that each unique state is vistied once. When the next state matches a previously vistied state (match), we can backtrack to repeat work
+
+### State Explosion
+
+* Non-trivial programs have many more states in their finite state machines that can lead to memory limitations or time limitatiosn
+
+# Static Testing Part 3
+
+### How does symbolic execution reduce size of state space
+
+* Symbolic execution is assigning symbolic expressions instead of actual values to variables during execution
+    * Instead of x = 1, y = true... we do x = A + 1, y = A * b
+    * Model checker can prove through math that it will always pass for every input value without having to try them one by one 
+
+### Role constraint solver plays in symbolic execution
+
+* Constraint solvers will determine whether a path is infesible, if it is, it will ont continue down that pathj
+
+### Deficiencies of symbolic execution and why it cannot be easily applied to all programs
+
+* Can sometimes run into issues when dealing with loops, complex math constraints, or complex data structures
+* Constraint solving is NP-complete in genreal
+* They can also struggle with complex data structures
+
+# Pairwise / Combinatorial Testing
+
+### NIST study on the frequency of defects for various numbers of variable interactions
+
+* Q: Do defects really occur as a result of interactions between variables?
+* Q: If so, how many variables are typically involved in a defect
+
+* Defects do occur as a result of interactions between variables
+* At max, just six variables are involved in a defect
+* Majority of defects are found just by testing all possible pairs
+
+### Define pairwise and combinatorial testing
+
+* Pairwise Testing:
+    * Testing all possible pairs of interactions ("all pairs")
+    * Testing all possible interactions within a pair
+ 
+* Combinatorial Testing
+    * Related to testing interactions between t variables from entire set of variables
+    * An instance of combinatorial testing where t = 2
+
+### Covering array
+
+* A set of test cases covering all t-way combinations
+
+# Smoke / Exploratory Testing
+
+### Why smoke testing can help the QA team work more efficiently
+
+* Minimal testing to ensure that the system is ready for serious testing
+* Sets up software / hardware testing environemnt
+* No need to spend the effort if the system isn't ready for prime time
+* Avoids wasting tester's time
+
+### Other names for smoke testing
+
+* Confidence testing, Sanity testing, Build Verification Testing
+
+### Build verification vs unit testing during TDD
+
+* BVT is a form of regression test that checks whether program has regressed due to recent changes
+* Includes integration tests, unit tests, and basic quality control
+
+### BVT Triggering and its tradeoffs
+
+* It's run when new code has been commited and a new build created
+
+### Results of BVT pass or fail
+
+* Pass
+    * Notify QA team by automated email for further testing
+* Fail
+    * code repository is in a broken state now
+    * Nobody can add code to the repository until something is done about it
+    * Developer's responsiblity to immediately revert repository to a safe version and patch the bug    
+
+### Why BVT must be fast
+
+* Critical path of development. A BVT fail leads to all changes needing to be reverted and no commits can be done
+* Every minute saved in BVT is a minute saved in the development cycle
+
+### Where exploratory tests may be needed
+
+* Exploratory tests are tests done without a test plan
+* Done so the QA team can learn more about the system and influence its development, while also forumulating a test plan
+
+### Pros and cons of explanatory Testing
+
+* Pros
+    * Fast: can focus on finding defects quickly
+    * Flexible: No overhead in updating tests
+    * Improves testers knowledge 
+* Cons
+    * Unregulated: Quality depends heavily on tester
+    * Unrepeatable: Defects may not be reproducible
+    * Unknown coverage: Hard to tell coverage after testing
+    * Hard to automate: Needs a knowledgable human being to do it
+
+# Security Testing
+
+### Infosec (CIA) triad
+
+* Information Security Triad
+    * Three attributes that define a system that provides information security
+    * summarized by CIA 
+
+### Be able to tell which of the triad a particular attacks tries to compromise (confidentiality, integrity, availability)
+
+* Confidentiality - No unauthorized users may read data
+* Integrity - No unauthorized users may write data
+* Availibility - System is availble for reading or writing
+
+* Attacks on condifentialty: Interception
+    * Eavesdropping, keylogging, phishing
+* Attacks on integrity: Modification / fabrication
+    * Malware that formats hard disk of computer, or fills it with garbage data
+    * Digital signature forgery: Electronic messages are "signed" using a digital signature to prove authenticity and integrity. The message is modified and the signature is forged
+* Attacks on availibility: Interruption
+    * DoS (denial of service), power grid attack  
+
+### Vulnerability, exploit, attack
+
+* Vulnerability: Weakness of a system
+* Explot: Mechanism for compromising a system
+* Attack: Actual compromising of the system
+
+### differences between types of malicious code
+
+* Spyware: surreptitiously monitors your actions
+* Adware: Shows you ads when browsing a webpage
+* Ransomware: threatens to publish data or block access until a ransom is payed
+* Bacteria: Program that consumes system resources (fork bomb)
+* DoS program that floods a server with messages to shut it down
+
+### 8 Common types of attacks
+
+* Logic Bomb: hidden come within program that sets off attack when triggered
+* Trapdoor: secret undocumented access to a system or app
+* Trojan horse: program that pretends to be another program
+* Virus: replicates itself WITH human intervention
+* Worm: replicates itself WITHOUT human intervention
+* Zombie: Computer or program being run by an unauthorized controller
+* Bot network - collection of zombies controlled by a master
+
+* Injection attacks
+* Cross-Site Scripting
+* Insecure Object Refernce Exploit
+* Buffer overflow
+* Broken authentication exploit
+* Security misconfiguration exploit
+* Insecure storage exploit
+* social engineering
+
+### Same Origin Policy
+
+* Web browser sandboxing architecture
+    * Webpage can access data in another webpage only if from same URL origin 
+
+### How cross-site scripting cirucmvents SOP
+
+* Allows malicious website to execute Javascript code
+    * Accross site boundaries
+    * Ignoring SOP protections 
